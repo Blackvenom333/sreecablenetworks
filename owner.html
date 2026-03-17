@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Owner Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="topbar">
+        <h2>Owner Dashboard</h2>
+        <a class="logout-btn" href="/logout">Logout</a>
+    </div>
+
+    <div class="summary-grid">
+        <div class="summary-card pending-card">
+            <h3>Pending Customers</h3>
+            <div class="count">{{ pending_count }}</div>
+        </div>
+
+        <div class="summary-card paid-card">
+            <h3>Paid Customers</h3>
+            <div class="count">{{ paid_count }}</div>
+        </div>
+    </div>
+
+    <h3>Add Customer</h3>
+    <form method="POST" action="/add_customer">
+        <div class="form-row">
+            <select name="section" required>
+                <option value="">Section</option>
+                <option>A</option>
+                <option>B</option>
+                <option>C</option>
+                <option>D</option>
+            </select>
+
+            <input type="text" name="customer_id" placeholder="Customer ID" required>
+            <input type="text" name="name" placeholder="Name" required>
+            <input type="text" name="phone" placeholder="Phone" required>
+
+            <select name="status">
+                <option>Active</option>
+                <option>Inactive</option>
+            </select>
+
+            <input type="number" name="opening_paid" placeholder="Paid ₹" value="0">
+        </div>
+
+        <button class="action-btn">Add Customer</button>
+    </form>
+
+    <h3>Update Payment</h3>
+    <form method="POST" action="/update_payment">
+        <div class="form-row">
+            <select name="section" required>
+                <option value="">Section</option>
+                <option>A</option>
+                <option>B</option>
+                <option>C</option>
+                <option>D</option>
+            </select>
+
+            <input type="text" name="customer_id" placeholder="Customer ID" required>
+            <input type="number" name="amount" placeholder="Amount ₹" required>
+        </div>
+
+        <button class="action-btn">Update Payment</button>
+    </form>
+
+    <h3>Customers</h3>
+
+    <table>
+        <tr>
+            <th>Section</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Total Paid</th>
+            <th>Months</th>
+            <th>Due</th>
+        </tr>
+
+        {% for c in customers %}
+        <tr>
+            <td>{{ c.section }}</td>
+            <td>{{ c.customer_id }}</td>
+            <td>{{ c.name }}</td>
+            <td>{{ c.phone }}</td>
+            <td>{{ c.status }}</td>
+            <td>{{ c.total_paid }}</td>
+            <td>{{ c.months_covered }}</td>
+            <td>{{ c.due_this_month }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+</body>
+</html>
