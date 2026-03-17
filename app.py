@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 app.secret_key = "tv_portal_secret_key_2026"
 
-DB_NAME = "tv.db"
+DB_NAME = "/tmp/tv.db"
 MONTHLY_FEE = 250
 
 
