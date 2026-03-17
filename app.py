@@ -1,6 +1,6 @@
 from flask import Flask, request, redirect, session, render_template
 import sqlite3
-import os
+import pandas as pd
 
 app = Flask(__name__)
 app.secret_key = "tv_portal_secret_key_2026"
@@ -24,25 +24,25 @@ def init_db():
     cur.execute("""
     CREATE TABLE IF NOT EXISTS owner (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL
+        username TEXT UNIQUE,
+        password TEXT
     )
     """)
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        section TEXT NOT NULL,
-        customer_id TEXT NOT NULL,
-        name TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'Active',
-        total_paid INTEGER NOT NULL DEFAULT 0,
+        section TEXT,
+        customer_id TEXT,
+        name TEXT,
+        phone TEXT,
+        status TEXT,
+        total_paid INTEGER,
         UNIQUE(section, customer_id)
     )
     """)
 
-    # Default login
+    # default login
     cur.execute("SELECT COUNT(*) FROM owner")
     if cur.fetchone()[0] == 0:
         cur.execute(
@@ -56,18 +56,18 @@ def init_db():
 
 # ---------------- LOGIC ---------------- #
 
-def calculate_customer_status(total_paid):
-    months_covered = total_paid // MONTHLY_FEE
-    remainder = total_paid % MONTHLY_FEE
+def calculate(total_paid):
+    months = total_paid // MONTHLY_FEE
+    rem = total_paid % MONTHLY_FEE
 
     if total_paid == 0:
-        due_this_month = MONTHLY_FEE
-    elif remainder == 0:
-        due_this_month = 0
+        due = MONTHLY_FEE
+    elif rem == 0:
+        due = 0
     else:
-        due_this_month = MONTHLY_FEE - remainder
+        due = MONTHLY_FEE - rem
 
-    return months_covered, due_this_month
+    return months, due
 
 
 # ---------------- ROUTES ---------------- #
@@ -77,123 +77,148 @@ def login():
     error = None
 
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        captcha = request.form.get("captcha")
+        u = request.form["username"]
+        p = request.form["password"]
+        c = request.form["captcha"]
 
-        if captcha != "7":
-            error = "Captcha is incorrect."
+        if c != "7":
+            error = "Captcha wrong"
             return render_template("login.html", error=error)
 
         conn = get_db_connection()
         owner = conn.execute(
             "SELECT * FROM owner WHERE username=? AND password=?",
-            (username, password)
+            (u, p)
         ).fetchone()
         conn.close()
 
-        if owner is None:
-            error = "Invalid username or password."
+        if not owner:
+            error = "Invalid login"
             return render_template("login.html", error=error)
 
-        session["owner_logged_in"] = True
+        session["login"] = True
         return redirect("/owner")
 
     return render_template("login.html", error=error)
 
 
 @app.route("/owner")
-def owner_dashboard():
-    if not session.get("owner_logged_in"):
+def owner():
+    if not session.get("login"):
         return redirect("/")
 
     conn = get_db_connection()
-    raw_customers = conn.execute(
-        "SELECT * FROM customers ORDER BY section, customer_id"
-    ).fetchall()
+    data = conn.execute("SELECT * FROM customers ORDER BY section").fetchall()
     conn.close()
 
     customers = []
-    pending_count = 0
-    paid_count = 0
+    pending = 0
+    paid = 0
 
-    for c in raw_customers:
-        months, due = calculate_customer_status(c["total_paid"])
-
+    for c in data:
+        months, due = calculate(c["total_paid"])
         obj = dict(c)
-        obj["months_covered"] = months
-        obj["due_this_month"] = due
+        obj["months"] = months
+        obj["due"] = due
 
         if due == 0 and c["total_paid"] > 0:
-            paid_count += 1
+            paid += 1
         else:
-            pending_count += 1
+            pending += 1
 
         customers.append(obj)
 
     return render_template(
         "owner.html",
         customers=customers,
-        monthly_fee=MONTHLY_FEE,
-        pending_count=pending_count,
-        paid_count=paid_count
+        pending=pending,
+        paid=paid,
+        monthly_fee=MONTHLY_FEE
     )
 
 
 @app.route("/add_customer", methods=["POST"])
 def add_customer():
-    if not session.get("owner_logged_in"):
-        return redirect("/")
-
-    section = request.form.get("section")
-    customer_id = request.form.get("customer_id")
-    name = request.form.get("name")
-    phone = request.form.get("phone")
-    status = request.form.get("status")
-    opening_paid = int(request.form.get("opening_paid", 0))
-
     conn = get_db_connection()
     cur = conn.cursor()
 
     cur.execute(
-        "INSERT INTO customers (section, customer_id, name, phone, status, total_paid) VALUES (?, ?, ?, ?, ?, ?)",
-        (section, customer_id, name, phone, status, opening_paid)
+        "INSERT OR IGNORE INTO customers VALUES (NULL,?,?,?,?,?,?)",
+        (
+            request.form["section"],
+            request.form["customer_id"],
+            request.form["name"],
+            request.form["phone"],
+            request.form["status"],
+            int(request.form["opening_paid"])
+        )
     )
 
     conn.commit()
     conn.close()
-
     return redirect("/owner")
 
 
 @app.route("/update_payment", methods=["POST"])
 def update_payment():
-    if not session.get("owner_logged_in"):
-        return redirect("/")
-
-    section = request.form.get("section")
-    customer_id = request.form.get("customer_id")
-    amount = int(request.form.get("amount"))
-
     conn = get_db_connection()
     cur = conn.cursor()
 
-    customer = cur.execute(
+    c = cur.execute(
         "SELECT * FROM customers WHERE section=? AND customer_id=?",
-        (section, customer_id)
+        (request.form["section"], request.form["customer_id"])
     ).fetchone()
 
-    if customer:
-        new_total = customer["total_paid"] + amount
+    if c:
+        new_total = c["total_paid"] + int(request.form["amount"])
 
         cur.execute(
             "UPDATE customers SET total_paid=? WHERE section=? AND customer_id=?",
-            (new_total, section, customer_id)
+            (new_total, request.form["section"], request.form["customer_id"])
         )
 
         conn.commit()
 
     conn.close()
+    return redirect("/owner")
+
+
+# ---------------- EXCEL IMPORT ---------------- #
+
+@app.route("/import_excel", methods=["POST"])
+def import_excel():
+    file = request.files["file"]
+
+    if not file:
+        return redirect("/owner")
+
+    try:
+        df = pd.read_excel(file, engine="openpyxl")
+    except Exception as e:
+        return f"Excel Error: {e}"
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    for _, row in df.iterrows():
+        try:
+            cur.execute(
+                "INSERT OR IGNORE INTO customers VALUES (NULL,?,?,?,?,?,?)",
+                (
+                    str(row.get("Section", "")).strip(),
+                    str(row.get("Customer ID", "")).strip(),
+                    str(row.get("Name", "")).strip(),
+                    str(row.get("Phone", "")).strip(),
+                    str(row.get("Status", "Active")).strip(),
+                    int(row.get("Total Paid", 0))
+                )
+            )
+        except:
+            continue
+
+    conn.commit()
+    conn.close()
+
     return redirect("/owner")
 
 
