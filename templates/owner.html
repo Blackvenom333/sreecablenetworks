@@ -1,72 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Owner Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
 
 <div class="container">
 
     <div class="topbar">
         <h2>Owner Dashboard</h2>
-        <a class="logout-btn" href="/logout">Logout</a>
+        <a class="logout" href="/logout">Logout</a>
     </div>
 
-    <div class="summary-grid">
-        <div class="summary-card pending-card">
+    <div class="cards">
+        <div class="card red">
             <h3>Pending Customers</h3>
-            <div class="count">{{ pending_count }}</div>
+            <p>{{ pending }}</p>
         </div>
 
-        <div class="summary-card paid-card">
+        <div class="card green">
             <h3>Paid Customers</h3>
-            <div class="count">{{ paid_count }}</div>
+            <p>{{ paid }}</p>
         </div>
     </div>
 
     <h3>Add Customer</h3>
-    <form method="POST" action="/add_customer">
-        <div class="form-row">
-            <select name="section" required>
-                <option value="">Section</option>
-                <option>A</option>
-                <option>B</option>
-                <option>C</option>
-                <option>D</option>
-            </select>
+    <form method="POST" action="/add_customer" class="form-row">
 
-            <input type="text" name="customer_id" placeholder="Customer ID" required>
-            <input type="text" name="name" placeholder="Name" required>
-            <input type="text" name="phone" placeholder="Phone" required>
+        <select name="section">
+            <option>Select Section</option>
+            <option>A</option>
+            <option>B</option>
+            <option>C</option>
+            <option>D</option>
+        </select>
 
-            <select name="status">
-                <option>Active</option>
-                <option>Inactive</option>
-            </select>
+        <input name="customer_id" placeholder="Customer ID">
+        <input name="name" placeholder="Customer Name">
+        <input name="phone" placeholder="Phone Number">
 
-            <input type="number" name="opening_paid" placeholder="Paid ₹" value="0">
-        </div>
+        <select name="status">
+            <option>Select Status</option>
+            <option>Active</option>
+            <option>Inactive</option>
+        </select>
 
-        <button class="action-btn">Add Customer</button>
+        <input name="opening_paid" value="0">
+
+        <button>Add Customer</button>
     </form>
 
     <h3>Update Payment</h3>
-    <form method="POST" action="/update_payment">
-        <div class="form-row">
-            <select name="section" required>
-                <option value="">Section</option>
-                <option>A</option>
-                <option>B</option>
-                <option>C</option>
-                <option>D</option>
-            </select>
+    <form method="POST" action="/update_payment" class="form-row">
 
-            <input type="text" name="customer_id" placeholder="Customer ID" required>
-            <input type="number" name="amount" placeholder="Amount ₹" required>
-        </div>
+        <select name="section">
+            <option>Select Section</option>
+            <option>A</option>
+            <option>B</option>
+            <option>C</option>
+            <option>D</option>
+        </select>
 
-        <button class="action-btn">Update Payment</button>
+        <input name="customer_id" placeholder="Customer ID">
+        <input name="amount" placeholder="Amount ₹">
+
+        <button>Update Payment</button>
+    </form>
+
+    <h3>Upload Excel</h3>
+    <form method="POST" action="/import_excel" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <button>Upload</button>
     </form>
 
     <h3>Customers</h3>
@@ -74,13 +79,14 @@
     <table>
         <tr>
             <th>Section</th>
-            <th>ID</th>
+            <th>Customer ID</th>
             <th>Name</th>
             <th>Phone</th>
             <th>Status</th>
             <th>Total Paid</th>
             <th>Months</th>
             <th>Due</th>
+            <th>Billing</th>
         </tr>
 
         {% for c in customers %}
@@ -89,12 +95,21 @@
             <td>{{ c.customer_id }}</td>
             <td>{{ c.name }}</td>
             <td>{{ c.phone }}</td>
-            <td>{{ c.status }}</td>
-            <td>{{ c.total_paid }}</td>
-            <td>{{ c.months_covered }}</td>
-            <td>{{ c.due_this_month }}</td>
+
+            <td class="{{ 'active' if c.status == 'Active' else 'inactive' }}">
+                {{ c.status }}
+            </td>
+
+            <td>₹{{ c.total_paid }}</td>
+            <td>{{ c.months }}</td>
+            <td>₹{{ c.due }}</td>
+
+            <td class="{{ 'paid' if c.due == 0 and c.total_paid > 0 else 'pending' }}">
+                {{ "PAID" if c.due == 0 and c.total_paid > 0 else "PENDING" }}
+            </td>
         </tr>
         {% endfor %}
+
     </table>
 
 </div>
