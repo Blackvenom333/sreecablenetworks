@@ -5,27 +5,33 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="box">
-        <h2>Owner Login</h2>
 
-        <form method="POST">
-            <label>Username</label>
-            <input type="text" name="username" required>
+<div class="box">
+    <h2>Owner Login</h2>
 
-            <label>Password</label>
-            <input type="password" name="password" required>
+    <form method="POST">
+        <label>Username</label>
+        <input type="text" name="username" required>
 
-            <div class="captcha">Captcha: What is 5 + 2 ?</div>
+        <label>Password</label>
+        <input type="password" name="password" required>
 
-            <label>Enter Captcha</label>
-            <input type="text" name="captcha" required>
+        <div class="captcha">Captcha: What is 5 + 2 ?</div>
 
-            <button type="submit">Login</button>
-        </form>
+        <label>Enter Captcha</label>
+        <input type="text" name="captcha" required>
 
-        {% if error %}
-            <div class="error">{{ error }}</div>
-        {% endif %}
+        <button type="submit">Login</button>
+    </form>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <div class="hint">
+        <b>Login:</b> owner / admin123
     </div>
+</div>
+
 </body>
 </html>
