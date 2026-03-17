@@ -1,13 +1,13 @@
 body {
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     background: #f4f7fb;
     margin: 0;
-}
-
-.container {
     padding: 20px;
 }
-
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
 .topbar {
     display: flex;
     justify-content: space-between;
@@ -21,7 +21,6 @@ body {
     text-decoration: none;
     border-radius: 6px;
 }
-
 .cards {
     display: flex;
     gap: 20px;
@@ -30,25 +29,27 @@ body {
 
 .card {
     flex: 1;
-    background: #fff;
-    padding: 20px;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
     text-align: center;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .red p {
     color: red;
-    font-size: 30px;
+    font-size: 32px;
+    font-weight: bold;
 }
 
 .green p {
     color: green;
-    font-size: 30px;
+    font-size: 32px;
+    font-weight: bold;
 }
-
 .form-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 20px;
 }
@@ -57,17 +58,21 @@ input, select {
     padding: 10px;
     border-radius: 6px;
     border: 1px solid #ccc;
+    min-width: 150px;
 }
 
 button {
     background: #1f4e79;
     color: white;
     border: none;
-    padding: 10px;
+    padding: 10px 15px;
     border-radius: 6px;
     cursor: pointer;
 }
 
+button:hover {
+    background: #173a5a;
+}
 table {
     width: 100%;
     border-collapse: collapse;
@@ -77,14 +82,14 @@ table {
 th {
     background: #1f4e79;
     color: white;
-    padding: 10px;
+    padding: 12px;
 }
 
 td {
     padding: 10px;
     text-align: center;
+    border-bottom: 1px solid #ddd;
 }
-
 .active {
     color: green;
     font-weight: bold;
@@ -103,4 +108,45 @@ td {
 .pending {
     color: red;
     font-weight: bold;
+}
+.login-box {
+    width: 350px;
+    margin: 100px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.login-box h2 {
+    text-align: center;
+    color: #1f4e79;
+}
+
+.login-box input {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.captcha-box {
+    margin-top: 12px;
+    background: #eef3f8;
+    padding: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.error {
+    color: red;
+    text-align: center;
+    margin-top: 10px;
+}
+
+.hint {
+    font-size: 12px;
+    text-align: center;
+    color: gray;
+    margin-top: 10px;
+}
+    color: gray;
 }
